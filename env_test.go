@@ -20,6 +20,7 @@ func TestGetEnvStr(t *testing.T) {
 	}{
 		{"Valid", args{"TEST_STR", "string"}, "Is String"},
 		{"Default", args{"TEST_STR1", "string"}, "string"},
+		{"Empty", args{"TEST_STR_EMPTY", ""}, ""},
 	}
 
 	for _, tc := range testCases {
@@ -96,6 +97,8 @@ func TestGetEnvSalt(t *testing.T) {
 	}{
 		{"Valid", args{"TEST_SALT", "default_salt"}, "Is StringIs StringIs StringIs String"},
 		{"Default", args{"TEST_SALT1", "default_salt"}, "default_saltdefault_saltdefault_saltdefault_salt"},
+		{"Long", args{"TEST_SALT_LONG", "This is very long salt string"}, "This is very long salt str"},
+		{"Empty", args{"TEST_SALT_EMPTY", ""}, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,6 +123,7 @@ func TestGetEnvUrl(t *testing.T) {
 		{"Valid", args{"TEST_URL", "https://default.url"}, "https://example.com/"},
 		{"Default", args{"TEST_URL1", "https://default.url"}, "https://default.url/"},
 		{"Invalid", args{"TEST_URL_INVALID", "https://default.url"}, "https://default.url/"},
+		{"Empty", args{"TEST_URL_EMPTY", ""}, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

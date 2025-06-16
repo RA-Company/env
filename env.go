@@ -62,6 +62,11 @@ func GetEnvSalt(key, byDefault string) string {
 	if Salt == "" {
 		Salt = byDefault
 	}
+
+	if Salt == "" {
+		return ""
+	}
+
 	count := float64(32) / float64(len(Salt))
 	if count > 1 {
 		Salt = strings.Repeat(Salt, int(count+1))
@@ -101,6 +106,10 @@ func GetEnvUrl(key string, byDefault string) string {
 		if u.Hostname() == "" {
 			s = byDefault
 		}
+	}
+
+	if s == "" {
+		return s
 	}
 
 	if s[len(s)-1] != '/' {
