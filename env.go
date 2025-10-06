@@ -21,7 +21,7 @@ func GetEnvStr(key string, byDefault string) string {
 	return v
 }
 
-// GetEnvStrOrDefault retrieves an environment variable as a string, returning a default value if not set.
+// GetEnvInt retrieves an environment variable as an int, returning a default value if not set.
 //
 // Parameters:
 //   - key: The name of the environment variable to retrieve.
