@@ -8,103 +8,95 @@ import (
 	"strings"
 )
 
-// GetEnvStr retrieves an environment variable as a string, returning a default value if not set.
-//
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default value to return if the environment variable is not set or is empty.
-func GetEnvStr(key string, byDefault string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		return byDefault
+// GetEnvStr returns the value of the environment variable named by key,
+// or def if the variable is not set or is empty.
+func GetEnvStr(key string, def string) string {
+	v, ok := os.LookupEnv(key)
+	if !ok || v == "" {
+		return def
 	}
 	return v
 }
 
-// GetEnvInt retrieves an environment variable as an int, returning a default value if not set.
-//
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default value to return if the environment variable is not set or is empty.
-func GetEnvInt(key string, byDefault int) int {
-	s := GetEnvStr(key, "")
-	v, err := strconv.Atoi(s)
+// GetEnvInt returns the value of the environment variable named by key parsed as int,
+// or def if the variable is not set, is empty, or cannot be parsed.
+func GetEnvInt(key string, def int) int {
+	v, ok := os.LookupEnv(key)
+	if !ok || v == "" {
+		return def
+	}
+	vInt, err := strconv.Atoi(v)
 	if err != nil {
-		return byDefault
+		return def
 	}
-	return v
+	return vInt
 }
 
-// GetEnvBool retrieves an environment variable as a boolean, returning a default value if not set or if parsing fails.
-//
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default value to return if the environment variable is not set or if parsing fails.
-func GetEnvBool(key string, byDefault bool) bool {
-	s := GetEnvStr(key, "")
-	v, err := strconv.ParseBool(s)
+// GetEnvBool returns the value of the environment variable named by key parsed as bool,
+// or def if the variable is not set, is empty, or cannot be parsed.
+// Accepted values: 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False.
+func GetEnvBool(key string, def bool) bool {
+	v, ok := os.LookupEnv(key)
+	if !ok || v == "" {
+		return def
+	}
+	vBool, err := strconv.ParseBool(v)
 	if err != nil {
-		return byDefault
+		return def
 	}
-	return v
+	return vBool
 }
 
-// GetEnvSalt retrieves an environment variable as a salt string, ensuring it is exactly 32 characters long.
-// If the environment variable is shorter than 32 characters, it repeats the value until it reaches 32 characters.
-// If the environment variable is longer than 32 characters, it truncates the value to 32 characters.
-// If the environment variable is not set, it returns a default salt value, which is also adjusted to be 32 characters long.
+// GetEnvSalt returns a 32-byte key derived from an environment variable,
+// suitable for use as an AES-256 symmetric key or similar fixed-size secret.
 //
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default value to use.
-func GetEnvSalt(key, byDefault string) string {
-	Salt := GetEnvStr(key, byDefault)
-	if Salt == "" {
-		Salt = byDefault
-	}
-
-	if Salt == "" {
+// The raw value is stretched or truncated to exactly 32 bytes:
+//   - shorter than 32 bytes: the value is repeated until it reaches at least
+//     32 bytes, then truncated to exactly 32.
+//   - longer than 32 bytes: truncated to the first 32 bytes.
+//   - exactly 32 bytes: returned unchanged.
+//
+// If the variable is not set or is empty, def is used as the source material.
+// If both are empty, an empty string is returned.
+//
+// Note: this function operates on bytes, not Unicode code points.
+// Multibyte UTF-8 characters may be split at the 32-byte boundary.
+// Use ASCII values for predictable results.
+func GetEnvSalt(key, def string) string {
+	salt := GetEnvStr(key, def)
+	if salt == "" {
 		return ""
 	}
 
-	count := float64(32) / float64(len(Salt))
-	if count > 1 {
-		Salt = strings.Repeat(Salt, int(count+1))
+	if len(salt) < 32 {
+		salt = strings.Repeat(salt, (32/len(salt))+1)
 	}
-	if len(Salt) > 32 {
-		Salt = Salt[:32]
+	if len(salt) > 32 {
+		salt = salt[:32]
 	}
 
-	return Salt
+	return salt
 }
 
-// GetEnvUrl retrieves an environment variable as a URL, ensuring it ends with a slash.
-// If the environment variable is not set, it returns a default URL with a trailing slash.
-// If the environment variable is set but does not contain a valid URL, it returns the default URL.
-//
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default URL to return if the environment variable is not set or is invalid.
-func GetEnvUrl(key string, byDefault string) string {
+// GetEnvUrl returns the value of the environment variable named by key as a URL with a trailing slash.
+// The URL must have an http, https, or wss scheme and a non-empty hostname; otherwise def is used.
+// If the variable is not set or is empty, def is used. If def is also empty, an empty string is returned.
+func GetEnvUrl(key string, def string) string {
 	s := GetEnvStr(key, "")
 	if s == "" {
-		s = byDefault
+		s = def
 	}
 
 	u, err := url.Parse(s)
 	if err != nil {
-		s = byDefault
+		s = def
 	} else {
 		if !slices.Contains([]string{"http", "https", "wss"}, u.Scheme) {
-			s = byDefault
-		}
-
-		if u.Host == "" {
-			s = byDefault
+			s = def
 		}
 
 		if u.Hostname() == "" {
-			s = byDefault
+			s = def
 		}
 	}
 
@@ -119,16 +111,16 @@ func GetEnvUrl(key string, byDefault string) string {
 	return s
 }
 
-// GetEnvFloat retrieves an environment variable as a float64, returning a default value if not set or if parsing fails.
-//
-// Parameters:
-//   - key: The name of the environment variable to retrieve.
-//   - byDefault: The default value to return if the environment variable is not set or if parsing fails.
-func GetEnvFloat(key string, byDefault float64) float64 {
-	s := GetEnvStr(key, "")
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return byDefault
+// GetEnvFloat returns the value of the environment variable named by key parsed as float64,
+// or def if the variable is not set, is empty, or cannot be parsed.
+func GetEnvFloat(key string, def float64) float64 {
+	v, ok := os.LookupEnv(key)
+	if !ok || v == "" {
+		return def
 	}
-	return v
+	vFloat, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return def
+	}
+	return vFloat
 }
