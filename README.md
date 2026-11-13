@@ -1,94 +1,69 @@
-# Simple Environment loader module
+# Simple Environment Loader
 
-Load different values from environment settings.
+Read typed values from environment variables with fallback defaults.
 
-# Functions list
+## Functions
 
-```func GetEnvStr(key string, byDefault string) string```
+### `GetEnvStr(key, def string) string`
 
-<details>
-<summary>Function description</summary>
+Returns the value of the environment variable named by key,
+or def if the variable is not set or is empty.
 
-GetEnvStr retrieves an environment variable as a string, returning a default value if not set.
+### `GetEnvInt(key string, def int) int`
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default value to return if the environment variable is not set or is empty.
-</details>
+Returns the value of the environment variable named by key parsed as int,
+or def if the variable is not set, is empty, or cannot be parsed.
 
-```func GetEnvInt(key string, byDefault int) int```
+### `GetEnvBool(key string, def bool) bool`
 
-<details>
-<summary>Function description</summary>
+Returns the value of the environment variable named by key parsed as bool,
+or def if the variable is not set, is empty, or cannot be parsed.
+Accepted values: `1`, `t`, `T`, `TRUE`, `true`, `True`, `0`, `f`, `F`, `FALSE`, `false`, `False`.
 
-GetEnvInt retrieves an environment variable as an int, returning a default value if not set.
+### `GetEnvSalt(key, def string) string`
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default value to return if the environment variable is not set or is empty.
-</details>
+Returns a 32-byte key derived from the environment variable named by key,
+suitable for use as an AES-256 symmetric key or similar fixed-size secret.
 
-```func GetEnvBool(key string, byDefault bool) bool```
+The raw value is stretched or truncated to exactly 32 bytes:
+- shorter than 32 bytes: repeated until at least 32 bytes, then truncated to 32.
+- longer than 32 bytes: truncated to the first 32 bytes.
+- exactly 32 bytes: returned unchanged.
 
-<details>
-<summary>Function description</summary>
+If the variable is not set or is empty, def is used as the source material.
+If both are empty, an empty string is returned.
 
-GetEnvBool retrieves an environment variable as a boolean, returning a default value if not set or if parsing fails.
+> **Note:** operates on bytes, not Unicode code points. Use ASCII values for predictable results.
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default value to return if the environment variable is not set or if parsing fails.
-</details>
+### `GetEnvUrl(key string, def string) string`
 
-```func GetEnvSalt(key string, byDefault string) string```
+Returns the value of the environment variable named by key as a URL with a trailing slash.
+The URL must have an `http`, `https`, or `wss` scheme and a non-empty hostname; otherwise def is used.
+If the variable is not set or is empty, def is used. If def is also empty, an empty string is returned.
 
-<details>
-<summary>Function description</summary>
+### `GetEnvFloat(key string, def float64) float64`
 
-GetEnvSalt retrieves an environment variable as a salt string, ensuring it is exactly 32 characters long.
-If the environment variable is shorter than 32 characters, it repeats the value until it reaches 32 characters.
-If the environment variable is longer than 32 characters, it truncates the value to 32 characters.
-If the environment variable is not set, it returns a default salt value, which is also adjusted to be 32 characters long.
+Returns the value of the environment variable named by key parsed as float64,
+or def if the variable is not set, is empty, or cannot be parsed.
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default value to use.
-</details>
+## Staying up to date
 
-```func GetEnvUrl(key string, byDefault string) string```
+```bash
+go get -u github.com/ra-company/env
+```
 
-<details>
-<summary>Function description</summary>
+## Supported Go versions
 
-GetEnvUrl retrieves an environment variable as a URL, ensuring it ends with a slash.
-If the environment variable is not set, it returns a default URL with a trailing slash.
-If the environment variable is set but does not contain a valid URL, it returns the default URL.
+Go 1.26 and later.
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default URL to return if the environment variable is not set or is invalid.
-</details>
+## License
 
-```func GetEnvFloat(key string, byDefault float64) float64```
+MIT — see [LICENSE](LICENSE).
 
-<details>
-<summary>Function description</summary>
+## Dependencies
 
-GetEnvFloat retrieves an environment variable as a float64, returning a default value if not set or if parsing fails.
+**Tests only**
 
-Parameters:
-  - key: The name of the environment variable to retrieve.
-  - byDefault: The default value to return if the environment variable is not set or if parsing fails.
-</details>
-
-## Used libraries
-* https://github.com/stretchr/testify - Module for tests (MIT License)
-
-# Staying up to date
-To update library to the latest version, use go get -u github.com/ra-company/env.
-
-# Supported go versions
-We currently support the most recent major Go versions from 1.25.0 onward.
-
-# License
-This project is licensed under the terms of the GPL-3.0 license.
+| Library | Purpose | License |
+|---------|---------|---------|
+| [github.com/stretchr/testify](https://github.com/stretchr/testify) | Test assertions | MIT |
