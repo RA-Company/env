@@ -46,6 +46,25 @@ If the variable is not set or is empty, def is used. If def is also empty, an em
 Returns the value of the environment variable named by key parsed as float64,
 or def if the variable is not set, is empty, or cannot be parsed.
 
+### `GetEnvDuration(key string, def time.Duration) time.Duration`
+
+Returns the value of the environment variable named by key parsed as time.Duration,
+or def if the variable is not set, is empty, or cannot be parsed.
+
+The value is written in a human format: parts with the units `d` (days), `h` (hours),
+`m` (minutes) and `s` (seconds), in any case, divided by spaces or written together:
+`7d`, `2h 30m`, `2h30m`, `1d 2h 30m 15s`. A number without a unit is seconds (`90` is 90 seconds).
+The numbers are whole, the time must be positive and not longer than 100 years.
+The parser is also available as `ParseDuration(s string) (time.Duration, error)`.
+
+## Testing
+
+Tests are self-contained: each one sets the variables it needs with `t.Setenv`.
+
+```bash
+make tests
+```
+
 ## Staying up to date
 
 ```bash
